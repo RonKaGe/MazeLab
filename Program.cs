@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Data.Common;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 
 namespace GenerationMaze
 {
@@ -9,9 +11,15 @@ namespace GenerationMaze
         private string brick = "\u2588";
         private string[,] MazeArr = new string[15, 15];
         private int EntrySide;
+        private int ExitSide;
 
         private int columns = 15;
         private int rows = 15;
+
+        private int EntryRow, EntryCol; // Позиция входа потому что у нас он
+                                        // может быть с 4 сторон, поэтому
+                                        // нужно учитывать столбцы и строки
+        private int ExitRow, ExitCol; // Позиция выхода
 
         public void DataAsk()
         {
@@ -58,19 +66,27 @@ namespace GenerationMaze
             {
                 case 0:
                     EntrySide = 0;
-                    MazeArr[0, rnd.Next(1, rows - 1)] = "A";
+                    EntryCol = rnd.Next(1, columns - 1);
+                    EntryRow = 0;
+                    MazeArr[0, EntryCol] = "A";
                     break;
                 case 1:
                     EntrySide = 1;
-                    MazeArr[rnd.Next(1, rows - 1), rows - 1] = "A";
+                    EntryRow = rnd.Next(1, rows - 1);
+                    EntryCol = columns - 1;
+                    MazeArr[EntryRow, columns - 1] = "A";
                     break;
                 case 2:
                     EntrySide = 2;
-                    MazeArr[rows - 1, rnd.Next(1, rows - 1)] = "A";
+                    EntryCol = rnd.Next(1, columns - 1);
+                    EntryRow = rows - 1;
+                    MazeArr[rows - 1, EntryCol] = "A";
                     break;
                 case 3:
                     EntrySide = 3;
-                    MazeArr[rnd.Next(1, rows - 1), 0] = "A";
+                    EntryRow = rnd.Next(1, rows - 1);
+                    EntryCol = 0;
+                    MazeArr[EntryRow, 0] = "A";
                     break;
             }
         }
@@ -84,7 +100,7 @@ namespace GenerationMaze
         {
             var rnd = new Random();
             int side = rnd.Next(4);
-            while (side == EntrySide)
+            while (side == ExitSide)
             {
                 side = rnd.Next(4);
             }
@@ -92,18 +108,48 @@ namespace GenerationMaze
             switch (side)
             {
                 case 0:
-                    MazeArr[0, rnd.Next(1, rows - 1)] = "E";
+                    ExitCol = rnd.Next(1, columns - 1);
+                    ExitRow = 0;
+                    MazeArr[0, ExitCol] = "E";
                     break;
                 case 1:
-                    MazeArr[rnd.Next(1, rows - 1), rows - 1] = "E";
+                    ExitRow = rnd.Next(1, rows - 1);
+                    ExitCol = columns - 1;
+                    MazeArr[ExitRow, columns - 1] = "E";
                     break;
                 case 2:
-                    MazeArr[rows - 1, rnd.Next(1, rows - 1)] = "E";
+                    ExitCol = rnd.Next(1, columns - 1);
+                    ExitRow = rows - 1;
+                    MazeArr[rows - 1, ExitCol] = "E";
                     break;
                 case 3:
-                    MazeArr[rnd.Next(1, rows - 1), 0] = "E";
+                    ExitRow = rnd.Next(1, rows - 1);
+                    ExitCol = 0;
+                    MazeArr[ExitRow, 0] = "E";
                     break;
             }
+        }
+
+        private void EnsurePathClear() // тут крч делаем проход 
+                                       //в соседних клетках входа и выхода
+        {
+            if (EntrySide == 0) // для входа
+                MazeArr[1, EntryCol] = " ";
+            else if (EntrySide == 1)
+                MazeArr[EntryRow, EntryCol - 1] = " ";
+            else if (EntrySide == 2)
+                MazeArr[EntryRow - 1, EntryCol] = " ";
+            else if (EntrySide == 3)
+                MazeArr[EntryRow, 1] = " ";
+
+            if (ExitSide == 0) // для выхода
+                MazeArr[1, ExitCol] = " ";
+            else if (ExitSide == 1)
+                MazeArr[ExitRow, ExitCol - 1] = " ";
+            else if (ExitSide == 2)
+                MazeArr[ExitRow - 1, ExitCol] = " ";
+            else if (ExitSide == 3)
+                MazeArr[ExitRow, 1] = " ";
         }
 
         public void GenerateMaze()
@@ -123,6 +169,7 @@ namespace GenerationMaze
 
             MakeEntrance();
             MakeExit();
+            EnsurePathClear();
 
             if (plotnost == 1)
             {
