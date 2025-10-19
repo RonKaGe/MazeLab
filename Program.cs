@@ -88,6 +88,8 @@ namespace GenerationMaze
             {
                 side = rnd.Next(4);
             }
+            ExitSide = side;
+
 
             switch (side)
             {
