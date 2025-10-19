@@ -6,6 +6,7 @@ namespace GenerationMaze
 {
     public class Maze
     {
+        Random rnd = new Random();
         private int plotnost;
         private int ItemsAmount;
         private string brick = "\u2588";
@@ -59,7 +60,6 @@ namespace GenerationMaze
 
         private void MakeEntrance()
         {
-            var rnd = new Random();
             int side = rnd.Next(4);
 
             switch (side)
@@ -98,9 +98,8 @@ namespace GenerationMaze
         }
         private void MakeExit()
         {
-            var rnd = new Random();
             int side = rnd.Next(4);
-            while (side == ExitSide)
+            while (side == EntrySide)   // изменил параметр на корректный
             {
                 side = rnd.Next(4);
             }
@@ -110,21 +109,25 @@ namespace GenerationMaze
             switch (side)
             {
                 case 0:
+                    ExitSide = 0;           // переменная для сохранения стороны выхода
                     ExitCol = rnd.Next(1, columns - 1);
                     ExitRow = 0;
                     MazeArr[0, ExitCol] = "E";
                     break;
                 case 1:
+                    ExitSide = 1;
                     ExitRow = rnd.Next(1, rows - 1);
                     ExitCol = columns - 1;
                     MazeArr[ExitRow, columns - 1] = "E";
                     break;
                 case 2:
+                    ExitSide = 2;
                     ExitCol = rnd.Next(1, columns - 1);
                     ExitRow = rows - 1;
                     MazeArr[rows - 1, ExitCol] = "E";
                     break;
                 case 3:
+                    ExitSide = 3;
                     ExitRow = rnd.Next(1, rows - 1);
                     ExitCol = 0;
                     MazeArr[ExitRow, 0] = "E";
@@ -132,31 +135,44 @@ namespace GenerationMaze
             }
         }
 
-        private void EnsurePathClear() // тут крч делаем проход 
-                                       //в соседних клетках входа и выхода
+        private void EnsurePathClear() // отчистка стен после входа и перед выходом,
+                                       // чтобы дать пользователю возможность войти и выйти без проблем
+                                 
         {
-            if (EntrySide == 0) // для входа
-                MazeArr[1, EntryCol] = " ";
-            else if (EntrySide == 1)
-                MazeArr[EntryRow, EntryCol - 1] = " ";
-            else if (EntrySide == 2)
-                MazeArr[EntryRow - 1, EntryCol] = " ";
-            else if (EntrySide == 3)
-                MazeArr[EntryRow, 1] = " ";
-
-            if (ExitSide == 0) // для выхода
-                MazeArr[1, ExitCol] = " ";
-            else if (ExitSide == 1)
-                MazeArr[ExitRow, ExitCol - 1] = " ";
-            else if (ExitSide == 2)
-                MazeArr[ExitRow - 1, ExitCol] = " ";
-            else if (ExitSide == 3)
-                MazeArr[ExitRow, 1] = " ";
+            switch (EntrySide) 
+            {
+                case 0:
+                    MazeArr[EntryRow+1, EntryCol] = " ";
+                    break;
+                case 1:
+                    MazeArr[EntryRow, EntryCol-1] = " ";
+                    break;
+                case 2:
+                    MazeArr[EntryRow-1, EntryCol] = " ";
+                    break;
+                case 3:
+                    MazeArr[EntryRow, EntryCol+1] = " ";
+                    break;
+            }
+            switch(ExitSide) 
+            {
+                case 0:
+                    MazeArr[ExitRow+1, ExitCol] = " ";
+                    break;
+                case 1:
+                    MazeArr[ExitRow, ExitCol-1] = " ";
+                    break;
+                case 2:
+                    MazeArr[ExitRow-1, ExitCol] = " ";
+                    break;
+                case 3:
+                    MazeArr[ExitRow, ExitCol+1] = " ";
+                    break;
+            }
         }
 
         public void GenerateMaze()
         {
-            var rnd = new Random();
 
             for (int i = 0; i < rows; i++)
             {
@@ -171,7 +187,6 @@ namespace GenerationMaze
 
             MakeEntrance();
             MakeExit();
-            EnsurePathClear();
 
             if (plotnost == 1)
             {
@@ -279,6 +294,7 @@ namespace GenerationMaze
                     }
                 }
             }
+            EnsurePathClear();
         }
     }
 
