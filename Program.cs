@@ -11,7 +11,7 @@ namespace GenerationMaze
         private int plotnost;
         private int ItemsAmount;
         private string brick = "\u2588";
-        private string[,] MazeArr = new string[15, 15];
+        public string[,] MazeArr = new string[15, 15];
         private int EntrySide;
         private int ExitSide;
 
@@ -23,7 +23,6 @@ namespace GenerationMaze
                                         // нужно учитывать столбцы и строки
         private int ExitRow, ExitCol; // Позиция выхода
 
-        //private Random rnd = new Random();
         private void PlaceItems()
         {
 
@@ -65,7 +64,7 @@ namespace GenerationMaze
             Console.Clear();
         }
 
-        public void DrawMaze()
+        public void DrawMaze(string [,] MazeArr)   //передаем массив чтобы могли вызывать метод для двух лабиринтов 
         {
             Console.WriteLine("\t\t\t Генерируем лабиринт....\n\n\n");
 
@@ -340,6 +339,13 @@ namespace GenerationMaze
             PlaceItems();
         }
         
+        public string[,] UnknownMaze = new string[15,15]; // второй массив, отображающий неизвестный компьютеру,
+                                                           // но уже сгенирированный нами ранее лабиринт
+        public void GoingThrowMaze()
+        {
+            UnknownMaze[EntryRow, EntryCol] = "A";
+        }                                                                   // метод прохода компьютером лабиринта 
+
     }
 
     class Program
@@ -349,7 +355,7 @@ namespace GenerationMaze
             Maze maze = new Maze();
             maze.DataAsk();
             maze.GenerateMaze();
-            maze.DrawMaze();
+            maze.DrawMaze(maze.MazeArr);                                    // сделал два массива публичными, чтобы могли в мейне обращаться к двум сразу
         }
     }
 }
