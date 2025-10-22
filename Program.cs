@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace GenerationMaze
 {
@@ -15,10 +16,11 @@ namespace GenerationMaze
         private int EntrySide;
         private int ExitSide;
 
+
         private int columns = 15;
         private int rows = 15;
 
-        private int EntryRow, EntryCol; // Позиция входа потому что у нас он
+        private static int EntryRow, EntryCol; // Позиция входа потому что у нас он
                                         // может быть с 4 сторон, поэтому
                                         // нужно учитывать столбцы и строки в
         private int ExitRow, ExitCol; // Позиция выхода
@@ -90,6 +92,10 @@ namespace GenerationMaze
                     {
                         Console.Write(" *");
                     }
+                    else if (c == "?")
+                    {
+                        Console.Write(" ?");
+                    }
                     else
                     {
                         Console.Write("  ");
@@ -131,6 +137,7 @@ namespace GenerationMaze
                     break;
             }
         }
+                
         private void PutBrick(int r, int c)
         {
 
@@ -340,12 +347,91 @@ namespace GenerationMaze
         }
         
         public string[,] UnknownMaze = new string[15,15]; // второй массив, отображающий неизвестный компьютеру,
-                                                           // но уже сгенирированный нами ранее лабиринт
-        public void GoingThrowMaze()
+                                                          // но уже сгенирированный нами ранее лабиринт
+        private void GenerationUnknownMaze()               // генерируем заготовку 
         {
             UnknownMaze[EntryRow, EntryCol] = "A";
-        }                                                                   // метод прохода компьютером лабиринта 
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++) 
+                {
+                    if(UnknownMaze[i, j] != "A")
+                    {
+                        UnknownMaze[i,j] = "?";
+                    }
+                }
+            }
+        }
 
+        private bool Inside(int r, int c) =>                //проверка выхода за границы лабиринта(массива)
+          r >= 0 && r < rows && c >= 0 && c < columns;
+
+
+        private bool[,] visited = new bool[15, 15];             // будем хранить тут значения известных проходов
+        private int[] R = new int[4] { -1, 0, 1, 0 };          // это массивы, при комбинации которых будет получаться направление,
+        private int[] C = new int[4] { 0, 1, 0, -1 };                                                   // что то типо векторов -1 0 наверх; 0 1 вправо и т.д. 
+
+        private void dfc(int r, int c)                  //dfc или поиск в глубину
+        {
+
+            visited[r, c] = true;                       
+            UnknownMaze[r,c]=MazeArr[r,c];
+
+            for(int i = 0; i < 4; i++)                     
+            {
+                int nr = r + R[i];                                  // nr = nextrow nc = nextcolumn
+                int nc = c + C[i];
+
+                if (!Inside(nr, nc)) continue;
+
+                if (MazeArr[nr,nc] == brick)
+                {
+                    UnknownMaze[nr,nc] = brick;
+                    continue;
+                    
+                }
+                if (!visited[nr, nc]) { dfc(nr, nc); }              // рекурсивный шаг
+            }                                                                         
+        } 
+
+        
+       
+        public void GoingThrowMaze()
+        {              
+                                                                        // метод прохода компьютером лабиринта 
+            GenerationUnknownMaze();
+                DrawMaze(UnknownMaze);
+                dfc(EntryRow,EntryCol);
+                DrawMaze(UnknownMaze);
+            int counter1 = 0;
+            int counter2 = 0;
+            for (int i = 0; i < rows; i++)                                  //сравнение числа вкусняшек в двух лабиринтах
+            {
+                for(int j = 0;j<columns; j++)
+                {
+                    if (MazeArr[i, j] == "*") { counter1++; }
+                }
+            }
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    if (UnknownMaze[i, j] == "*") { counter2++; }
+                }
+            }
+            if (counter1 == counter2) { return; }
+            else
+            {
+                for (int i = 1; i < rows-1; i++)
+                {
+                    for (int j = 1; j < columns-1; j++)
+                    {
+                        if (MazeArr[i, j] == "*" && !visited[i,j]) { ItemsAmount--; }  //если несостыковка в количестве ищем в оригинальном лабиринте вкусняху
+                                                                                       //и проверяем чтобы в массиве прохода эта клетка была непройденной
+                    }
+                }
+            }
+        }
     }
 
     class Program
@@ -356,6 +442,7 @@ namespace GenerationMaze
             maze.DataAsk();
             maze.GenerateMaze();
             maze.DrawMaze(maze.MazeArr);                                    // сделал два массива публичными, чтобы могли в мейне обращаться к двум сразу
+            maze.GoingThrowMaze();
         }
     }
 }
