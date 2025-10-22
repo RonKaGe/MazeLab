@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace GenerationMaze
 {
@@ -14,11 +15,13 @@ namespace GenerationMaze
         public string[,] MazeArr = new string[15, 15];
         private int EntrySide;
         private int ExitSide;
+        private int PersRow;
+        private int PersCol;
 
         private int columns = 15;
         private int rows = 15;
 
-        private int EntryRow, EntryCol; // Позиция входа потому что у нас он
+        private static int EntryRow, EntryCol; // Позиция входа потому что у нас он
                                         // может быть с 4 сторон, поэтому
                                         // нужно учитывать столбцы и строки в
         private int ExitRow, ExitCol; // Позиция выхода
@@ -90,6 +93,10 @@ namespace GenerationMaze
                     {
                         Console.Write(" *");
                     }
+                    else if (c == "?")
+                    {
+                        Console.Write(" ?");
+                    }
                     else
                     {
                         Console.Write("  ");
@@ -130,6 +137,8 @@ namespace GenerationMaze
                     MazeArr[EntryRow, 0] = "A";
                     break;
             }
+                PersRow = EntryRow;
+                PersCol = EntryCol;
         }
         private void PutBrick(int r, int c)
         {
@@ -340,12 +349,96 @@ namespace GenerationMaze
         }
         
         public string[,] UnknownMaze = new string[15,15]; // второй массив, отображающий неизвестный компьютеру,
-                                                           // но уже сгенирированный нами ранее лабиринт
-        public void GoingThrowMaze()
+                                                          // но уже сгенирированный нами ранее лабиринт
+        private void GenerationUnknownMaze()               // генерируем заготовку 
         {
             UnknownMaze[EntryRow, EntryCol] = "A";
-        }                                                                   // метод прохода компьютером лабиринта 
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++) 
+                {
+                    if(UnknownMaze[i, j] != "A")
+                    {
+                        UnknownMaze[i,j] = "?";
+                    }
+                }
+            }
+        }
 
+        private bool Inside(int r, int c) =>
+          r >= 0 && r < rows && c >= 0 && c < columns;
+
+
+        private List<int> visited = new List<int>();
+        private bool[,,] tried = new bool[15, 15, 4]; 
+
+        private bool TryStep(int side)
+        {
+            int nextRow = PersRow;   // куда собираемся
+            int nextCol = PersCol;
+
+            switch (side)
+            {
+                case 0: // вверх
+                    if (tried[PersRow,PersCol,0]==true) return false; 
+                    nextRow--;
+                    break;
+
+                case 1: // вправо
+                    if (tried[PersRow, PersCol, 1] == true) return false; 
+                    nextCol++;
+                    break;
+
+                case 2: // вниз
+                    if (tried[PersRow, PersCol, 2] == true) return false; 
+                    nextRow++;
+                    break;
+
+                case 3: // влево
+                    if (tried[PersRow, PersCol, 3] == true) return false; 
+                    nextCol--;
+                    break;
+
+                default:
+                    return false;
+
+            }
+            if (!Inside(nextRow, nextCol)) return false;
+            UnknownMaze[nextRow, nextCol] = MazeArr[nextRow,nextCol];
+            if (MazeArr[nextRow, nextCol] != brick)
+            {
+                visited.Add(side);
+                PersRow = nextRow;
+                PersCol = nextCol;
+                return true;
+            }
+            else 
+            {
+                tried[PersRow, PersCol, side] = true;
+                return false; 
+            }
+        }
+       
+        public void GoingThrowMaze()
+        {                                                                          // метод прохода компьютером лабиринта 
+            GenerationUnknownMaze();
+            while (true)
+            {
+                int side = rnd.Next(4);
+                TryStep(side);
+                DrawMaze(UnknownMaze);
+                Console.WriteLine(visited.Count);
+
+
+
+            }
+
+
+
+
+
+
+        }                                                                
     }
 
     class Program
@@ -356,6 +449,8 @@ namespace GenerationMaze
             maze.DataAsk();
             maze.GenerateMaze();
             maze.DrawMaze(maze.MazeArr);                                    // сделал два массива публичными, чтобы могли в мейне обращаться к двум сразу
+            maze.GoingThrowMaze();
+            maze.DrawMaze(maze.UnknownMaze);
         }
     }
 }
