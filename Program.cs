@@ -20,7 +20,7 @@ namespace GenerationMaze
 
         private int EntryRow, EntryCol; // Позиция входа потому что у нас он
                                         // может быть с 4 сторон, поэтому
-                                        // нужно учитывать столбцы и строки
+                                        // нужно учитывать столбцы и строки в
         private int ExitRow, ExitCol; // Позиция выхода
 
         private void PlaceItems()
