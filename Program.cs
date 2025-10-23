@@ -15,6 +15,7 @@ namespace GenerationMaze
         public string[,] MazeArr = new string[15, 15];
         private int EntrySide;
         private int ExitSide;
+        private int CollectionItems;
 
 
         private int columns = 15;
@@ -373,11 +374,19 @@ namespace GenerationMaze
 
         private void dfc(int r, int c)                  //dfc или поиск в глубину
         {
+            if (MazeArr[r, c] == "*" && !visited[r, c])
+            { // Если у нас комп наступает на предмет
+              // то счётчик собранных предметов обновляется
+
+                CollectionItems++;
+                Console.WriteLine($"Собран предмет! Всего: {CollectionItems} ");
+            }
 
             visited[r, c] = true;                       
             UnknownMaze[r,c]=MazeArr[r,c];
 
-            for(int i = 0; i < 4; i++)                     
+
+            for (int i = 0; i < 4; i++)                     
             {
                 int nr = r + R[i];                                  // nr = nextrow nc = nextcolumn
                 int nc = c + C[i];
@@ -391,18 +400,27 @@ namespace GenerationMaze
                     
                 }
                 if (!visited[nr, nc]) { dfc(nr, nc); }              // рекурсивный шаг
+
             }                                                                         
         } 
 
         
        
         public void GoingThrowMaze()
-        {              
-                                                                        // метод прохода компьютером лабиринта 
+        {
+            CollectionItems = 0;
+                                 // метод прохода компьютером лабиринта 
             GenerationUnknownMaze();
+
+            Console.WriteLine("Начальное состояние лабиринта: ");
                 DrawMaze(UnknownMaze);
+            Console.WriteLine("\n Начинаем прохождение . . . ");
                 dfc(EntryRow,EntryCol);
+            Console.WriteLine("\n Результат прохождения: ");
                 DrawMaze(UnknownMaze);
+            Console.WriteLine($"\n === РЕЗУЛЬТТЫ ПРОХОЖДЕНИЯ === ");
+            Console.WriteLine($"Собрано предметов: {CollectionItems} ");
+            Console.WriteLine($"Всего предметов в лабиринте: {ItemsAmount}");
             int counter1 = 0;
             int counter2 = 0;
             for (int i = 0; i < rows; i++)                                  //сравнение числа вкусняшек в двух лабиринтах
